@@ -1,0 +1,42 @@
+
+services:
+
+# ---------------------------------------------------------------------------------------------------------
+
+  gateway:
+    build: 
+      context: .
+      dockerfile: dockerfile.gateway  
+    container_name: web-gateway
+    volumes:
+      - ./web_proxy_nginx:/usr/share/nginx/html
+      - ./web_proxy_nginx/nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - "6688:8080"
+    depends_on:
+      - auth-service         
+
+  auth-service:
+    image: node:18-alpine
+    container_name: auth-service
+    working_dir: /app
+    volumes:
+      - ./web_proxy_node:/app 
+    command: sh -c "npm install express body-parser cors express-session mongoose socket.io csv-parser && node server.js"
+    restart: always
+    depends_on:
+      - mongo
+    ports:
+      - "3000:3000"      
+
+  mongo:
+    image: mongo:latest
+    container_name: mongodb
+    restart: always
+    volumes:
+      - ./web_proxy_mongo:/data/db
+    ports:
+      - "27017:27017"
+
+
+
