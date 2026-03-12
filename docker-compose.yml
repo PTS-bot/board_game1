@@ -3,16 +3,16 @@ services:
 
 # ---------------------------------------------------------------------------------------------------------
 
-  gateway:
+  web-game:
     build: 
       context: .
-      dockerfile: dockerfile.gateway  
-    container_name: web-gateway
+      dockerfile: dockerfile.gateway
+    container_name: web-game
     volumes:
       - ./web_proxy_nginx:/usr/share/nginx/html
       - ./web_proxy_nginx/nginx.conf:/etc/nginx/nginx.conf
     ports:
-      - "6688:8080"
+      - "7777:8080"
     depends_on:
       - auth-service         
 
