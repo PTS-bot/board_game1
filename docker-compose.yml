@@ -22,6 +22,7 @@ services:
     working_dir: /app
     volumes:
       - ./web_proxy_node:/app 
+      - ./web_proxy_nginx:/web_proxy_nginx
     command: sh -c "npm install express body-parser cors express-session mongoose socket.io csv-parser && node server.js"
     restart: always
     depends_on:

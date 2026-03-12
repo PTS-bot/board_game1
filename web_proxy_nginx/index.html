@@ -77,8 +77,24 @@
         <div style="background: white; color: #333; padding: 30px; border-radius: 20px; width: 400px; text-align: center;">
             <h2>🏝️ MATH ISLAND SETUP</h2>
             <div id="setup-offline">
-                <label>จำนวนนักเรียน (2-6 คน):</label>
-                <input type="number" id="off-count" value="2" min="2" max="6" style="width: 50px; padding: 5px;">
+                <h2>🎮 ยินดีต้อนรับสู่โหมดออฟไลน์</h2>
+            
+            <div style="margin-bottom: 20px; text-align: left; padding: 10px; background: #ecf0f1; border-radius: 10px;">
+                <label style="font-weight: bold; color: #2c3e50;">ชื่อเกม (Folder Name):</label><br>
+                <input type="text" id="game-name" value="math01" style="width: 100%; padding: 8px; margin-top: 5px;" placeholder="เช่น math01"><br><br>
+
+                <label style="font-weight: bold; color: #2c3e50;">ระดับชั้นปี (ตัวเลข 1-6):</label><br>
+                <input type="number" id="grade-level" style="width: 100%; padding: 8px; margin-top: 5px;" placeholder="เช่น 4" min="1" max="6"><br><br>
+            </div>
+
+            <label>จำนวนผู้เล่น:</label>
+            <select id="off-count" style="width: 100px; padding: 5px;">
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+            </select>
                 <br><br>
                 <label>💰 เงินเดือนจุด Start:</label>
                 <input type="number" id="start-salary" value="3000" style="width: 80px; padding: 5px; font-weight: bold; color: #2ecc71;">
@@ -162,6 +178,10 @@
         let baseSalary = 3000;
         let activePlayerId = null;
 
+        // ตัวแปรเก็บข้อมูล Multi-game และ Log
+        let activeGameName = "math01";
+        let activeGradeLevel = "";
+
         function renderOffNames() {
             const count = document.getElementById('off-count').value;
             const container = document.getElementById('off-names-list');
@@ -174,11 +194,27 @@
         document.getElementById('off-count').addEventListener('change', renderOffNames);
 
         function startOfflineGame() {
+            const gName = document.getElementById('game-name').value.trim();
+            const gGrade = document.getElementById('grade-level').value.trim();
+            
+            if (!gName) {
+                alert("กรุณาระบุชื่อโฟลเดอร์เกม เช่น math01");
+                return;
+            }
+            if (!gGrade || isNaN(gGrade)) {
+                alert("กรุณาระบุระดับชั้นปี เป็นตัวเลขเท่านั้น (เช่น 1, 2, 3)");
+                return;
+            }
+
+            activeGameName = gName;
+            activeGradeLevel = gGrade;
             baseSalary = parseInt(document.getElementById('start-salary').value) || 3000;
+            
             const inputs = document.querySelectorAll('.off-p-name');
             players = Array.from(inputs).map((inp, i) => ({
                 id: i, name: inp.value, money: 10000, posIndex: 0, 
-                items: [], color: getCol(i), bankrupt: false
+                items: [], color: getCol(i), bankrupt: false,
+                actionLog: [] // เก็บประวัติการตอบโจทย์
             }));
             
             // อ่านค่าจาก BoardSetup ที่ดึงมาจากไฟล์ board_config.js
@@ -186,13 +222,14 @@
             boardConfig = configObj.config;
             uiCols = configObj.cols;
             uiRows = configObj.rows;
+            const blockSize = configObj.blockSize || 60; // ขนาดบล็อก
 
             // บล็อกเดินได้คือจำนวนรอบกรอบ
             realBlockIds = Object.keys(boardConfig);
 
             const container = document.getElementById('board-container');
-            container.style.gridTemplateColumns = `repeat(${uiCols}, 60px)`;
-            container.style.gridTemplateRows = `repeat(${uiRows}, 60px)`;
+            container.style.gridTemplateColumns = `repeat(${uiCols}, ${blockSize}px)`;
+            container.style.gridTemplateRows = `repeat(${uiRows}, ${blockSize}px)`;
             
             document.getElementById('lobby-view').classList.add('hidden');
             document.getElementById('sidebar').classList.remove('hidden');
@@ -224,9 +261,18 @@
                 div.id = `block-${bId}`;
                 div.style.gridRow = coord.r;
                 div.style.gridColumn = coord.c;
+                
                 if(data.type !== 'C') {
-                    // C คือทะเลไม่มีรูปและข้อความใดๆ
-                    div.innerHTML = `<span style="font-size:8px; text-align: center;">${data.name}</span><br><span style="font-size:10px; color:#e74c3c;">฿${data.value}</span>`;
+                    // C คือทะเลไม่มีรูปและข้อความใดๆ ปรับ style เพิ่มสีทับรูปให้อ่านข้อความออก
+                    div.innerHTML = `<span style="font-size:10px; text-align: center; background: rgba(255,255,255,0.8); padding: 1px 4px; border-radius: 4px; font-weight: bold;">${data.name}</span><br><span style="font-size:12px; color:#e74c3c; font-weight: bold; background: rgba(255,255,255,0.8); padding: 1px 4px; border-radius: 4px; margin-top:2px; display:inline-block;">฿${data.value}</span>`;
+                    
+                    if (data.image) {
+                        div.style.backgroundImage = `url('${data.image}')`;
+                        div.style.backgroundSize = 'cover';
+                        div.style.backgroundPosition = 'center';
+                    } else if (data.color) {
+                        div.style.backgroundColor = data.color;
+                    }
                 }
                 container.appendChild(div);
             });
@@ -351,21 +397,56 @@
 
         function getCol(i) { return ['#e74c3c', '#2ecc71', '#f1c40f', '#9b59b6', '#e67e22', '#1abc9c'][i]; }
 
-        function endGame() {
+        async function endGame() {
             const sorted = [...players].sort((a,b) => b.money - a.money);
             const listDiv = document.getElementById('leaderboard-list');
             listDiv.innerHTML = '';
             
-            sorted.forEach((p, index) => {
+            for (let index = 0; index < sorted.length; index++) {
+                const p = sorted[index];
                 const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '🎖️';
                 const status = p.bankrupt ? '<span style="color:red; font-size:14px;">(ล้มละลาย 💀)</span>' : '';
+                
+                let downloadBtnHTML = `<span style="font-size:12px; color:gray;">กำลังบันทึก Log...</span>`;
+                
+                // ถ้านักเรียนคนนี้เคยตอบคำถาม ให้ทำการบันทึกลงเซิร์ฟเวอร์
+                if (p.actionLog && p.actionLog.length > 0) {
+                    try {
+                        const res = await fetch('http://localhost:3000/api/saveGameLog', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                gameName: activeGameName,
+                                gradeLevel: activeGradeLevel,
+                                studentName: p.name,
+                                logData: p.actionLog
+                            })
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            // Link ดาวน์โหลดไฟล์ CSV โดยตรง
+                            downloadBtnHTML = `<a href="${data.filePath}" download style="background:#3498db; color:white; padding:5px 10px; border-radius:5px; text-decoration:none; font-size:14px;">📥 โหลดประวัติ (.csv)</a>`;
+                        } else {
+                            downloadBtnHTML = `<span style="color:red; font-size:12px;">บันทึก Log ไม่สำเร็จ</span>`;
+                        }
+                    } catch (e) {
+                        console.error('Error saving log for', p.name, e);
+                        downloadBtnHTML = `<span style="color:red; font-size:12px;">Error เซิร์ฟเวอร์</span>`;
+                    }
+                } else {
+                    downloadBtnHTML = `<span style="color:gray; font-size:12px;">ไม่ได้ทำโจทย์เลย</span>`;
+                }
+
                 listDiv.innerHTML += `
                     <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 2px dashed #ecf0f1; font-size: 20px;">
-                        <span style="font-weight: bold;">${medal}อันดับ ${index+1} : ${p.name} ${status}</span>
+                        <div>
+                            <span style="font-weight: bold;">${medal}อันดับ ${index+1} : ${p.name} ${status}</span><br>
+                            ${downloadBtnHTML}
+                        </div>
                         <span style="color: #2ecc71; font-weight: bold; font-size: 24px;">฿ ${Math.floor(p.money).toLocaleString()}</span>
                     </div>
                 `;
-            });
+            }
 
             document.getElementById('sidebar').classList.add('hidden');
             document.getElementById('main-game').classList.add('hidden');
@@ -387,9 +468,9 @@
 
         function fetchQuestionAndShow(level) {
             const questionId = 1; 
-            const dir = `img_L${level}`;
-            const csvUrl = `/${dir}/${questionId}.csv`;
-            const imgUrl = `/${dir}/${questionId}.png`;
+            const dir = `/all_game/${activeGameName}/img_L${level}`;
+            const csvUrl = `${dir}/${questionId}.csv`;
+            const imgUrl = `${dir}/${questionId}.png`;
             
             const imgElement = document.getElementById('question-image');
             const noImgElement = document.getElementById('question-no-img');
@@ -466,12 +547,21 @@
             checkAnswer(ans.toLowerCase() === correctAnswer.toLowerCase());
         }
 
-        function checkAnswer(isCorrect) {
+        function checkAnswer(isCorrect, isTimeout = false) {
             clearInterval(questionTimer);
             document.getElementById('question-modal').classList.add('hidden');
             
             let p = players[activePlayerId];
             let payAmount = 0;
+            let logStatus = isTimeout ? "หมดเวลา" : (isCorrect ? "ถูก" : "ผิด");
+
+            // บันทึก Log การตอบคำถาม
+            const qTitle = document.getElementById('question-title').innerText;
+            p.actionLog.push({
+                question: qTitle,
+                level: activeBlockMetaData?.currentRule?.level || "N/A",
+                status: logStatus
+            });
 
             if (activeBlockMetaData && activeBlockMetaData.currentRule) {
                 if (isCorrect) {
@@ -520,7 +610,7 @@
                 if (time <= 0) {
                     clearInterval(questionTimer);
                     alert("⏰ หมดเวลา! ถือว่าตอบผิด");
-                    checkAnswer(false); // หมดเวลาถือว่าตอบผิด
+                    checkAnswer(false, true); // หมดเวลาถือว่าตอบผิด และให้ param timeout=true
                 }
             }, 1000);
         }

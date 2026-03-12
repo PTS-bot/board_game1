@@ -3,8 +3,11 @@
 
 const BoardSetup = {
     // กำหนดขนาดของกระดาน (คอลัมน์ x แถว)
-    cols: 18,
-    rows: 11,
+    cols: 16,
+    rows: 9,
+
+    // ขนาดกว้าง x สูง ของแต่ละบล็อก (เช่น 60, 80)
+    blockSize: 95,
 
     // กำหนดรายละเอียดของแต่ละบล็อก (เริ่มต้นที่ลำดับ 1)
     // type: 
@@ -15,10 +18,11 @@ const BoardSetup = {
     //   'E' = ท่องเที่ยว (ทำโจทย์ผ่าน เลือกลงช่องไหนก็ได้)
     //   'F' = ตกค้าง/เสียภาษี (เสีย % ของเงินที่มี)
     blocks: [
-        { id: 1, type: 'A', value: 3000, name: 'Start' },
-        { id: 2, type: 'B', value: 500, name: 'เกาะ 1' },
-        { id: 3, type: 'B', value: 800, name: 'เกาะ 2' },
-        { id: 4, type: 'B', value: 600, name: 'เกาะ 3' },
+        // เพิ่ม color: 'สี', image: 'path/to/img.png' เพื่อกำหนดรูปและสีพื้นหลังได้
+        { id: 1, type: 'A', value: 3000, name: 'Start', color: '#ffde59', image: '' },
+        { id: 2, type: 'B', value: 500, name: 'เกาะ 1', color: '#ff914d', image: '' },
+        { id: 3, type: 'B', value: 800, name: 'เกาะ 2', color: '#c1ff72', image: '' },
+        { id: 4, type: 'B', value: 600, name: 'เกาะ 3', color: '#7ed957', image: '' },
         { id: 5, type: 'C', value: 0, name: 'ทะเล' },
         { id: 6, type: 'B', value: 1000, name: 'เกาะ 4' },
         { id: 7, type: 'D', value: 0, name: 'คุกคณิต' },
@@ -86,5 +90,5 @@ function getBoardConfig() {
         }
     }
 
-    return { config, cols: BoardSetup.cols, rows: BoardSetup.rows };
+    return { config, cols: BoardSetup.cols, rows: BoardSetup.rows, blockSize: BoardSetup.blockSize || 60 };
 }
