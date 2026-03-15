@@ -1,0 +1,6 @@
+pawn.png (สำหรับพลทหาร)
+knight.png (สำหรับม้า/อัศวิน)
+rook.png (สำหรับเรือ)
+bishop.png (สำหรับบิชอป)
+queen.png (สำหรับราชินี)
+king.png (สำหรับคิง)

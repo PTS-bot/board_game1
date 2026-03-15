@@ -1,0 +1,63 @@
+<div>
+    <h2 style="color: #c0392b; text-align: center;">🔥 ความสามารถของตัวละคร (Character Abilities)</h2>
+    <div style="display: flex; flex-direction: column; gap: 20px; margin-top: 20px;">
+        <!-- Pawn -->
+        <div style="display: flex; align-items: center; background: #ecf0f1; padding: 15px; border-radius: 10px;">
+            <img src="/assets/pieces_info/pawn.png" alt="Pawn" style="width: 80px; height: 80px; margin-right: 20px; background: #bdc3c7; border-radius: 50%; object-fit: contain;">
+            <div>
+                <h3 style="margin: 0 0 5px 0; color: #2c3e50;">พลทหาร (Pawn) ♟️</h3>
+                <p style="margin: 0; font-size: 14px; color: #34495e;">เดินไปข้างหน้า 1 ช่อง (ตาแรกเดินได้ 2 ช่อง) โจมตีเฉียง 1 ช่อง<br>
+                <strong>โจมตีอัศวิน:</strong> ทำโจทย์ Lv 4<br>
+                <strong>โจมตีพลทหารด้วยกัน:</strong> ทำโจทย์ Lv 3</p>
+            </div>
+        </div>
+        <!-- Knight -->
+        <div style="display: flex; align-items: center; background: #ecf0f1; padding: 15px; border-radius: 10px;">
+            <img src="/assets/pieces_info/knight.png" alt="Knight" style="width: 80px; height: 80px; margin-right: 20px; background: #bdc3c7; border-radius: 50%; object-fit: contain;">
+            <div>
+                <h3 style="margin: 0 0 5px 0; color: #2c3e50;">อัศวิน (Knight) ♞</h3>
+                <p style="margin: 0; font-size: 14px; color: #34495e;">เดินเป็นรูปตัว L ข้ามตัวละครอื่นได้<br>
+                <strong>โจมตีตัวอื่น (ยกเว้น King, Queen):</strong> ทำโจทย์ Lv 1<br>
+                <strong>โจมตีอัศวินด้วยกัน:</strong> ทำโจทย์ Lv 3</p>
+            </div>
+        </div>
+        <!-- Rook -->
+        <div style="display: flex; align-items: center; background: #ecf0f1; padding: 15px; border-radius: 10px;">
+            <img src="/assets/pieces_info/rook.png" alt="Rook" style="width: 80px; height: 80px; margin-right: 20px; background: #bdc3c7; border-radius: 50%; object-fit: contain;">
+            <div>
+                <h3 style="margin: 0 0 5px 0; color: #2c3e50;">เรือ (Rook) ♜</h3>
+                <p style="margin: 0; font-size: 14px; color: #34495e;">เปรียบเสมือนรถถัง เดินตรงเป็นเส้นตรงยาว<br>
+                <strong>โจมตีและถูกโจมตี:</strong> เป็นโจทย์ Lv 2 ตลอดกาล เพราะโจมตีง่ายแต่ป้องกันตัวลำบาก (ยกเว้นได้บัฟ)</p>
+            </div>
+        </div>
+        <!-- Bishop -->
+        <div style="display: flex; align-items: center; background: #ecf0f1; padding: 15px; border-radius: 10px;">
+            <img src="/assets/pieces_info/bishop.png" alt="Bishop" style="width: 80px; height: 80px; margin-right: 20px; background: #bdc3c7; border-radius: 50%; object-fit: contain;">
+            <div>
+                <h3 style="margin: 0 0 5px 0; color: #2c3e50;">บิชอป (Bishop) ♝</h3>
+                <p style="margin: 0; font-size: 14px; color: #34495e;">เดินเฉียงเป็นแนวทแยงยาว<br>
+                <strong>Aura Buff:</strong> หากยืนอยู่ติดกับเป้าหมายที่เกิดการต่อสู้ (ระยะ 1 ช่อง 8 ทิศทาง) จะช่วย <strong>ลด Lv (-1)</strong> หากเป้าหมายเป็นฝั่งศัตรู หรือ <strong>เพิ่ม Lv (+1)</strong> หากเป้าหมายอยู่ฝั่งเดียวกัน</p>
+            </div>
+        </div>
+        <!-- Queen -->
+        <div style="display: flex; align-items: center; background: #ecf0f1; padding: 15px; border-radius: 10px;">
+            <img src="/assets/pieces_info/queen.png" alt="Queen" style="width: 80px; height: 80px; margin-right: 20px; background: #bdc3c7; border-radius: 50%; object-fit: contain;">
+            <div>
+                <h3 style="margin: 0 0 5px 0; color: #2c3e50;">ควีน (Queen) ♛</h3>
+                <p style="margin: 0; font-size: 14px; color: #34495e;">เดินได้ทั้งแนวตรงและแนวทแยง (รวมความสามารถของ Rook และ Bishop)<br>
+                <strong>Aura Buff:</strong> มีบัฟแบบเดียวกับ Bishop (+1/-1 Lv)<br>
+                <strong>Counter-attack:</strong> หากถูกโจมตีแล้วผู้โจมตีตอบคำถามพลาด ควีนจะสวนกลับและทำลายหมากคู่ต่อสู้ทันที</p>
+            </div>
+        </div>
+        <!-- King -->
+        <div style="display: flex; align-items: center; background: #ecf0f1; padding: 15px; border-radius: 10px;">
+            <img src="/assets/pieces_info/king.png" alt="King" style="width: 80px; height: 80px; margin-right: 20px; background: #bdc3c7; border-radius: 50%; object-fit: contain;">
+            <div>
+                <h3 style="margin: 0 0 5px 0; color: #2c3e50;">คิง (King) ♚</h3>
+                <p style="margin: 0; font-size: 14px; color: #34495e;">เดินได้ 1 ช่องในทุกทิศทาง<br>
+                <strong>ความสามารถโจมตี:</strong> เหมือนอัศวิน โจมตีศัตรู (ยกเว้น King, Queen) ด้วยโจทย์ Lv 1<br>
+                <strong>Counter-attack:</strong> เหมือนควีน หากมีคนมาโจมตีแล้วพลาด คิงจะเคลียร์ตัวนั้นทิ้งทันที!</p>
+            </div>
+        </div>
+    </div>
+</div>

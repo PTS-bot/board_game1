@@ -24,25 +24,25 @@
         .dice-icon { position: absolute; right: 10px; top: 10px; font-size: 24px; animation: bounce 0.5s infinite alternate; }
 
         /* --- พื้นที่กระดานเกม --- */
-        #main-game { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--water); position: relative; }
+        #main-game { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #2c3e50; position: relative; }
         #board-container { 
             display: grid; 
-            grid-template-columns: repeat(11, 60px); 
-            grid-template-rows: repeat(11, 60px); 
-            gap: 2px; padding: 10px; border: 5px solid #1a5276; border-radius: 15px;
+            grid-template-columns: repeat(8, 70px); 
+            grid-template-rows: repeat(8, 70px); 
+            border: 5px solid #1a5276; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
         
-        .block { background: #ecf0f1; border: 1px solid #000; border-radius: 5px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 9px; color: #333; position: relative; font-weight: bold; }
-        .block.water { background: var(--empty); border: none; color: transparent; }
-
-        .center-area { grid-column: 2 / 11; grid-row: 2 / 11; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .block { display: flex; align-items: center; justify-content: center; font-size: 40px; position: relative; cursor: pointer; user-select: none; }
+        .block.white { background: #f0d9b5; }
+        .block.black { background: #b58863; }
+        .block.highlight { box-shadow: inset 0 0 20px rgba(46, 204, 113, 0.8); }
+        .block.selected { background: #f1c40f !important; }
+        .block.attack { box-shadow: inset 0 0 20px rgba(231, 76, 60, 0.8); }
         
-        @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-5px); } }
-        .player-token { width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; position: absolute; bottom: 5px; transition: all 0.5s ease; z-index: 10; }
-        .btn-roll { background: #e67e22; color: white; padding: 10px 30px; border: none; border-radius: 50px; font-size: 18px; cursor: pointer; }
-        .btn-lvl { background: #3498db; color: white; border: none; padding: 15px; font-size: 20px; border-radius: 10px; cursor: pointer; margin: 5px; width: 45%; transition: 0.2s; }
-        .btn-lvl:hover { background: #2980b9; transform: scale(1.05); }
-
+        .piece { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; z-index: 10; transition: transform 0.2s; font-size: 50px;}
+        .piece:hover { transform: scale(1.1); }
+        
         #toast-container {
             position: fixed;
             top: 20px;
@@ -65,19 +65,29 @@
         }
         @keyframes fadein { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes fadeout { from { opacity: 1; } to { opacity: 0; } }
+        
+        #turn-indicator {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            padding: 10px 30px;
+            border-radius: 50px;
+            background: #ecf0f1;
+            color: #2c3e50;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
     </style>
-    <!-- โหลดไฟล์การตั้งค่าและคำสั่งต่างๆ -->
-    <script src="board_config.js"></script>
-    <script src="game_logic.js"></script>
+    <!-- โหลดสคริปต์เกมของหมากรุกแบบใหม่ -->
+    <script src="chess_logic.js"></script>
 </head>
 <body>
     <div id="toast-container"></div>
 
     <div id="lobby-view" style="position: absolute; width: 100%; height: 100%; background: #2c3e50; z-index: 100; display: flex; align-items: center; justify-content: center;">
         <div style="background: white; color: #333; padding: 30px; border-radius: 20px; width: 400px; text-align: center;">
-            <h2>🏝️ MATH ISLAND SETUP</h2>
+            <h2>♟️ CHESS GAME SETUP</h2>
             <div id="setup-offline">
-                <h2>🎮 ยินดีต้อนรับสู่โหมดออฟไลน์</h2>
+                <h2>🎮 สมรภูมิหมากรุกคณิตศาสตร์</h2>
             
             <div style="margin-bottom: 20px; text-align: left; padding: 10px; background: #ecf0f1; border-radius: 10px;">
                 <label style="font-weight: bold; color: #2c3e50;">ชื่อเกม (Folder Name):</label><br>
@@ -87,17 +97,8 @@
                 <input type="number" id="grade-level" style="width: 100%; padding: 8px; margin-top: 5px;" placeholder="เช่น 4" min="1" max="6"><br><br>
             </div>
 
-            <label>จำนวนผู้เล่น:</label>
-            <select id="off-count" style="width: 100px; padding: 5px;">
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-                <option value="5">5</option>
-                <option value="6">6</option>
-            </select>
-                <br><br>
-                <label>💰 เงินเดือนจุด Start:</label>
-                <input type="number" id="start-salary" value="3000" style="width: 80px; padding: 5px; font-weight: bold; color: #2ecc71;">
+            <input type="hidden" id="off-count" value="2">
+            <input type="hidden" id="start-salary" value="0">
                 
                 <div id="off-names-list" style="margin: 15px 0;"></div>
                 <button class="btn-roll" onclick="startOfflineGame()">เริ่มเกมในห้องเรียน</button>
@@ -114,17 +115,23 @@
     </div>
 
     <div id="main-game" class="hidden">
+        <!-- Menu Buttons in top right -->
+        <div style="position: absolute; top: 20px; right: 20px; display: flex; gap: 10px; z-index: 100;">
+            <button onclick="openInfoModal('character_abilities.html')" style="background: #e67e22; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: 0.2s;">🔥 ความสามารถตัวละคร</button>
+            <button onclick="openInfoModal('chess_rules.html')" style="background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: 0.2s;">📜 วิธีการเดินหมาก</button>
+        </div>
+        
+        <div id="turn-indicator">ตาของ: ขาว (White)</div>
         <div id="board-container">
-            <div class="center-area">
-                <div id="dice-result" style="font-size: 40px; margin-bottom: 10px;">🎲 ? 🎲</div>
-                <button id="btn-action-roll" class="btn-roll" onclick="handleRoll()">ทอยลูกเต๋า</button>
-                <div style="margin-top: 20px; opacity: 0.5;">
-                    <button onclick="fetchQuestionAndShow(1)" style="font-size: 12px; margin: 2px;">Test L1</button>
-                    <button onclick="fetchQuestionAndShow(2)" style="font-size: 12px; margin: 2px;">Test L2</button>
-                    <button onclick="fetchQuestionAndShow(3)" style="font-size: 12px; margin: 2px;">Test L3</button>
-                    <button onclick="fetchQuestionAndShow(4)" style="font-size: 12px; margin: 2px;">Test L4</button>
-                </div>
-            </div>
+            <!-- Board will be generated by JS -->
+        </div>
+        
+        <!-- Dev Testing Buttons -->
+        <div style="margin-top: 20px; opacity: 0.5; display:none;">
+            <button onclick="fetchQuestionAndShow(1)" style="font-size: 12px; margin: 2px;">Test L1</button>
+            <button onclick="fetchQuestionAndShow(2)" style="font-size: 12px; margin: 2px;">Test L2</button>
+            <button onclick="fetchQuestionAndShow(3)" style="font-size: 12px; margin: 2px;">Test L3</button>
+            <button onclick="fetchQuestionAndShow(4)" style="font-size: 12px; margin: 2px;">Test L4</button>
         </div>
     </div>
 
@@ -142,9 +149,9 @@
         <div style="background: white; color: #333; padding: 20px; border-radius: 15px; width: 80%; max-width: 600px; text-align: center; position: relative;">
             <div id="timer-display" style="position: absolute; top: 10px; right: 20px; font-size: 24px; font-weight: bold; color: #e74c3c;">⏳ 0</div>
             <h2 id="question-title">โจทย์คณิตศาสตร์</h2>
-            <div style="min-height: 200px; background: #ecf0f1; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; border-radius: 10px; overflow: hidden;">
-                <img id="question-image" src="" alt="Question Image" style="max-width: 100%; max-height: 300px; display: none;" onerror="this.onerror=null; this.style.display='none'; document.getElementById('question-no-img').style.display='block';">
-                <div id="question-no-img" style="color: #7f8c8d; font-size: 18px;">[ พื้นที่แสดงรูปโจทย์ (ถ้าไม่มีรูป) ]</div>
+            <div id="frame-container" style="min-height: 350px; background: #ecf0f1; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; border-radius: 10px; overflow: hidden; position: relative; background-size: cover; background-position: center; background-repeat: no-repeat;">
+                <img id="question-image" src="" alt="Question Image" style="max-width: 80%; max-height: 250px; display: none; z-index: 10; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.3);" onerror="this.onerror=null; this.style.display='none'; document.getElementById('question-no-img').style.display='block';">
+                <div id="question-no-img" style="color: #7f8c8d; font-size: 18px; z-index: 10; background: rgba(255,255,255,0.8); padding: 5px 10px; border-radius: 5px;">[ พื้นที่แสดงรูปโจทย์ (ถ้าไม่มีรูป) ]</div>
             </div>
             
             <div id="question-choices" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;"></div>
@@ -157,41 +164,48 @@
         </div>
     </div>
 
-    <!-- Modal เลือกระดับความยากสำหรับตกเกาะ B -->
-    <div id="level-select-modal" class="hidden" style="position: absolute; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 250; display: flex; align-items: center; justify-content: center;">
-        <div style="background: white; color: #333; padding: 30px; border-radius: 15px; width: 80%; max-width: 500px; text-align: center;">
-            <h2 style="color: #c0392b;">🏝️ เกาะท้าทายเอาชีวิตรอด! เลือกความยากเพื่อลดบทลงโทษ</h2>
-            <div id="level-options-container" style="display: flex; flex-wrap: wrap; justify-content: center; margin-top: 20px;">
-                <!-- ปุ่มต่างๆ จะถูกสร้างโดยอัตโนมัติจาก game_logic.js -->
-            </div>
-            <p style="color: #7f8c8d; font-size: 14px; margin-top: 15px;">** ถ้าตอบผิดจะต้องจ่ายค่าปรับแทนที่โชว์ในป้ายนะ!</p>
+    <!-- Info Modal Box -->
+    <div id="info-modal" class="hidden" style="position: absolute; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 400; display: flex; align-items: center; justify-content: center;">
+        <div style="background: white; color: #333; padding: 30px; border-radius: 15px; width: 80%; max-width: 700px; max-height: 80vh; overflow-y: auto; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <button onclick="document.getElementById('info-modal').classList.add('hidden')" style="position: absolute; top: 15px; right: 20px; background: #e74c3c; color: white; border: none; padding: 10px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.2s;">❌ ปิด</button>
+            <div id="info-content"></div>
         </div>
     </div>
 
+
+
+    <script src="chess_logic.js"></script>
     <script>
         const socket = io();
         let players = [];
-        let turn = 0;
-        let boardConfig = {};
-        let uiCols = 11, uiRows = 11;
-        let realBlockIds = []; // เก็บเฉพาะ ID ของบล็อกที่เดินได้
-        let baseSalary = 3000;
-        let activePlayerId = null;
-
+        let turnColor = 'white'; // white or black
+        
         // ตัวแปรเก็บข้อมูล Multi-game และ Log
         let activeGameName = "math01";
         let activeGradeLevel = "";
 
+        // เปิด Modal ข้อมูลที่มุมขวาบน
+        async function openInfoModal(fileName) {
+            try {
+                // เติม cache-buster เพื่อไม่ให้โหลดไฟล์เก่ากรณีมีแก้ไข
+                const res = await fetch(fileName + '?v=' + new Date().getTime());
+                const html = await res.text();
+                document.getElementById('info-content').innerHTML = html;
+                document.getElementById('info-modal').classList.remove('hidden');
+            } catch (e) {
+                alert("ไม่สามารถโหลดเนื้อหาได้: " + e.message);
+            }
+        }
+
         function renderOffNames() {
-            const count = document.getElementById('off-count').value;
+            const count = 2; // บังคับ 2 คนสำหรับหมากรุก
             const container = document.getElementById('off-names-list');
             container.innerHTML = '';
             for(let i=1; i<=count; i++) {
-                container.innerHTML += `<input type="text" class="off-p-name" value="นักเรียน ${i}" style="width: 80%; margin-bottom: 5px; padding: 5px;"><br>`;
+                container.innerHTML += `<div style="text-align: left; margin-bottom: 5px;"><label style="font-weight: bold; color: #2c3e50;">ชื่อผู้เล่น ${i}:</label></div><input type="text" class="off-p-name" value="ผู้เล่น ${i}" style="width: 100%; margin-bottom: 15px; padding: 8px; box-sizing: border-box;"><br>`;
             }
         }
         renderOffNames();
-        document.getElementById('off-count').addEventListener('change', renderOffNames);
 
         function startOfflineGame() {
             const gName = document.getElementById('game-name').value.trim();
@@ -208,204 +222,51 @@
 
             activeGameName = gName;
             activeGradeLevel = gGrade;
-            baseSalary = parseInt(document.getElementById('start-salary').value) || 3000;
             
             const inputs = document.querySelectorAll('.off-p-name');
-            players = Array.from(inputs).map((inp, i) => ({
-                id: i, name: inp.value, money: 10000, posIndex: 0, 
-                items: [], color: getCol(i), bankrupt: false,
-                actionLog: [] // เก็บประวัติการตอบโจทย์
-            }));
-            
-            // อ่านค่าจาก BoardSetup ที่ดึงมาจากไฟล์ board_config.js
-            const configObj = getBoardConfig();
-            boardConfig = configObj.config;
-            uiCols = configObj.cols;
-            uiRows = configObj.rows;
-            const blockSize = configObj.blockSize || 60; // ขนาดบล็อก
-
-            // บล็อกเดินได้คือจำนวนรอบกรอบ
-            realBlockIds = Object.keys(boardConfig);
-
-            const container = document.getElementById('board-container');
-            container.style.gridTemplateColumns = `repeat(${uiCols}, ${blockSize}px)`;
-            container.style.gridTemplateRows = `repeat(${uiRows}, ${blockSize}px)`;
+            players = [
+                { id: 0, name: inputs[0].value, color: 'white', isDefeated: false, actionLog: [] },
+                { id: 1, name: inputs[1].value, color: 'black', isDefeated: false, actionLog: [] }
+            ];
             
             document.getElementById('lobby-view').classList.add('hidden');
             document.getElementById('sidebar').classList.remove('hidden');
             document.getElementById('main-game').classList.remove('hidden');
-            initBoard();
-            updateUI();
-        }
-
-        function initBoard() {
-            const container = document.getElementById('board-container');
-            container.innerHTML = `<div class="center-area" style="grid-column: 2 / ${uiCols}; grid-row: 2 / ${uiRows};">
-                <div id="dice-result" style="font-size: 40px; margin-bottom: 10px;">🎲 ? 🎲</div>
-                <button id="btn-action-roll" class="btn-roll" onclick="handleRoll()">ทอยลูกเต๋า</button>
-            </div>`;
-
-            let coords = [];
-            for(let i=1; i<=uiCols; i++) coords.push({r:1, c:i});
-            for(let i=2; i<=uiRows; i++) coords.push({r:i, c:uiCols});
-            for(let i=uiCols-1; i>=1; i--) coords.push({r:uiRows, c:i});
-            for(let i=uiRows-1; i>=2; i--) coords.push({r:i, c:1});
-
-            coords.forEach((coord, index) => {
-                const bId = index + 1;
-                const data = boardConfig[bId];
-                if (!data) return;
-
-                const div = document.createElement('div');
-                div.className = `block ${data.type === 'C' ? 'water' : ''}`;
-                div.id = `block-${bId}`;
-                div.style.gridRow = coord.r;
-                div.style.gridColumn = coord.c;
-                
-                if(data.type !== 'C') {
-                    // C คือทะเลไม่มีรูปและข้อความใดๆ ปรับ style เพิ่มสีทับรูปให้อ่านข้อความออก
-                    div.innerHTML = `<span style="font-size:10px; text-align: center; background: rgba(255,255,255,0.8); padding: 1px 4px; border-radius: 4px; font-weight: bold;">${data.name}</span><br><span style="font-size:12px; color:#e74c3c; font-weight: bold; background: rgba(255,255,255,0.8); padding: 1px 4px; border-radius: 4px; margin-top:2px; display:inline-block;">฿${data.value}</span>`;
-                    
-                    if (data.image) {
-                        div.style.backgroundImage = `url('${data.image}')`;
-                        div.style.backgroundSize = 'cover';
-                        div.style.backgroundPosition = 'center';
-                    } else if (data.color) {
-                        div.style.backgroundColor = data.color;
-                    }
-                }
-                container.appendChild(div);
-            });
-            updateTokens();
-        }
-
-        function handleRoll() {
-            let p = players[turn];
-            if(p.bankrupt) {
-                // ข้ามเทิร์นคนล้มละลาย
-                turn = (turn + 1) % players.length;
-                return handleRoll(); 
-            }
-
-            const d1 = Math.floor(Math.random() * 6) + 1;
-            const d2 = Math.floor(Math.random() * 6) + 1;
-            const total = d1 + d2;
-            document.getElementById('dice-result').innerText = `🎲 ${d1} + ${d2} = ${total} ก้าว`;
-
-            // คำนวณตำแหน่งใหม่ โดยนับเฉพาะช่องที่ไม่ใช่ C (พื้นที่น้ำ)
-            let stepsRemaining = total;
-            let currentPos = p.posIndex;
-            let loopGuard = 0; // ป้องกัน infinite loop ถ้ากระดานมีแต่น้ำ
             
-            while(stepsRemaining > 0 && loopGuard < realBlockIds.length * 2) {
-                currentPos = (currentPos + 1) % realBlockIds.length;
-                loopGuard++;
-                
-                // ตรวจการผ่านจุด Start
-                const passingBlockId = realBlockIds[currentPos];
-                const passingBlockObj = boardConfig[passingBlockId];
-                
-                if (passingBlockObj && passingBlockObj.type === 'A' && currentPos !== p.posIndex) {
-                    p.money += baseSalary;
-                    alert(`🎉 ${p.name} ผ่านจุด Start รับเงินเดือน ฿${baseSalary.toLocaleString()} !!`);
-                }
-
-                if (passingBlockObj && passingBlockObj.type !== 'C') {
-                    stepsRemaining--; // นับก้าวเฉพาะพื้นที่เดินได้ (ไม่ใช่ C)
-                    loopGuard = 0; // รีเซ็ตลูปการ์ดเมื่อเจอช่องเดินได้
-                }
-            }
-
-            if(loopGuard >= realBlockIds.length * 2) {
-                alert("⚠️ ไม่พบพื้นที่ให้เหยียบพักได้เลย (ต้องมีบล็อกที่ไม่ใช่ C เพิ่มเติมใน board_config)!");
-                endPlayerTurn();
-                return;
-            }
-            
-            p.posIndex = currentPos;
-            updateTokens();
+            initChessBoard();
             updateUI();
-
-            // ปิดปุ่มทอยลูกเต๋าจนกว่าจะตอบคำถามเสร็จ หรือรับลอจิกเสร็จ
-            document.getElementById('btn-action-roll').disabled = true;
-            document.getElementById('btn-action-roll').style.opacity = '0.5';
-
-            setTimeout(() => {
-                activePlayerId = turn; // กำหนดคนตอบปัจจุบัน
-                // ตรวจว่าบล็อกปัจจุบันคืออะไรแล้วส่งต่อให้ file 'game_logic.js' จัดการ rule
-                const landedBlock = boardConfig[realBlockIds[currentPos]];
-                handleBlockLanding(p, landedBlock, function(proceedNextTurn) {
-                    if(proceedNextTurn === true) {
-                        endPlayerTurn();
-                    }
-                });
-            }, 800);
-        }
-
-        function endPlayerTurn() {
-            // เปลี่ยนตาให้คนที่มีสิทธิ์เล่นต่อ
-            turn = (turn + 1) % players.length;
-            const activePlayersCount = players.filter(pl => !pl.bankrupt).length;
-            while(players[turn].bankrupt && activePlayersCount > 1) {
-                turn = (turn + 1) % players.length;
-            }
-            updateTokens();
-            updateUI();
-
-            if (activePlayersCount <= 1) {
-                endGame();
-            } else {
-                const btnRoll = document.getElementById('btn-action-roll');
-                btnRoll.disabled = false;
-                btnRoll.style.opacity = '1';
-            }
         }
 
         function updateUI() {
             const container = document.getElementById('player-status-container');
             container.innerHTML = '';
-            players.forEach((p, i) => {
-                const isActive = (i === turn && !p.bankrupt);
-                const currentBlockId = realBlockIds[p.posIndex];
+            players.forEach((p) => {
+                const isActive = (p.color === turnColor && !p.isDefeated);
+                let cardStyle = p.isDefeated ? 'opacity: 0.5; filter: grayscale(100%); margin-bottom: 10px;' : 'margin-bottom: 10px; border-left: 5px solid ' + (p.color==='white'?'#eee':'#333');
                 
-                let cardStyle = p.bankrupt ? 'opacity: 0.5; filter: grayscale(100%); margin-bottom: 10px;' : 'margin-bottom: 10px;';
                 container.innerHTML += `
                     <div class="player-card ${isActive ? 'active' : ''}" style="${cardStyle}">
-                        ${isActive ? '<div class="dice-icon">🎲</div>' : ''}
-                        <h3 style="font-size: 16px;">${p.name} ${p.bankrupt ? '💀 (ล้มละลาย)' : ''}</h3>
-                        <div class="money" style="font-size: 18px;">฿ ${Math.floor(p.money).toLocaleString()}</div>
-                        ${!p.bankrupt ? `<div class="pos-info" style="font-size: 13px;">📍 อยู่จุดที่: ${currentBlockId} ${boardConfig[currentBlockId].name}</div>` : ''}
+                        <h3 style="font-size: 16px;">${p.color==='white'?'⚪':'⚫'} ${p.name} ${p.isDefeated ? '💀 (แพ้)' : ''}</h3>
                     </div>
                 `;
             });
+            
+            const turnText = turnColor === 'white' ? `⚪ ตาของ: ${players[0].name} (ขาว)` : `⚫ ตาของ: ${players[1].name} (ดำ)`;
+            const indicator = document.getElementById('turn-indicator');
+            indicator.innerText = turnText;
+            indicator.style.background = turnColor === 'white' ? '#ecf0f1' : '#2c3e50';
+            indicator.style.color = turnColor === 'white' ? '#2c3e50' : '#ecf0f1';
         }
 
-        function updateTokens() {
-            document.querySelectorAll('.player-token').forEach(t => t.remove());
-            players.forEach((p, i) => {
-                if (p.bankrupt) return; // ล้มละลายเอาตัวละครออก
-                const blockId = realBlockIds[p.posIndex];
-                const blockDiv = document.getElementById(`block-${blockId}`);
-                if (!blockDiv) return;
-                const token = document.createElement('div');
-                token.className = 'player-token';
-                token.style.backgroundColor = p.color;
-                token.style.left = (i * 8) + 'px';
-                blockDiv.appendChild(token);
-            });
-        }
 
-        function getCol(i) { return ['#e74c3c', '#2ecc71', '#f1c40f', '#9b59b6', '#e67e22', '#1abc9c'][i]; }
 
         async function endGame() {
-            const sorted = [...players].sort((a,b) => b.money - a.money);
             const listDiv = document.getElementById('leaderboard-list');
             listDiv.innerHTML = '';
             
-            for (let index = 0; index < sorted.length; index++) {
-                const p = sorted[index];
-                const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '🎖️';
-                const status = p.bankrupt ? '<span style="color:red; font-size:14px;">(ล้มละลาย 💀)</span>' : '';
+            for (let index = 0; index < players.length; index++) {
+                const p = players[index];
+                const status = p.isDefeated ? '<span style="color:red; font-size:14px;">(โดนรุกฆาต 💀)</span>' : '<span style="color:green; font-size:14px;">(ผู้ชนะ 🏆)</span>';
                 
                 let downloadBtnHTML = `<span style="font-size:12px; color:gray;">กำลังบันทึก Log...</span>`;
                 
@@ -424,7 +285,6 @@
                         });
                         const data = await res.json();
                         if (data.success) {
-                            // Link ดาวน์โหลดไฟล์ CSV โดยตรง
                             downloadBtnHTML = `<a href="${data.filePath}" download style="background:#3498db; color:white; padding:5px 10px; border-radius:5px; text-decoration:none; font-size:14px;">📥 โหลดประวัติ (.csv)</a>`;
                         } else {
                             downloadBtnHTML = `<span style="color:red; font-size:12px;">บันทึก Log ไม่สำเร็จ</span>`;
@@ -440,10 +300,9 @@
                 listDiv.innerHTML += `
                     <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 2px dashed #ecf0f1; font-size: 20px;">
                         <div>
-                            <span style="font-weight: bold;">${medal}อันดับ ${index+1} : ${p.name} ${status}</span><br>
+                            <span style="font-weight: bold;">${p.name} ${status}</span><br>
                             ${downloadBtnHTML}
                         </div>
-                        <span style="color: #2ecc71; font-weight: bold; font-size: 24px;">฿ ${Math.floor(p.money).toLocaleString()}</span>
                     </div>
                 `;
             }
@@ -459,10 +318,9 @@
         let activeBlockMetaData = null; // เก็บกฎที่รอกระทำหลังให้คำตอบ (เช่น penaltyModifier)
         let activeQuestionCategory = null; 
 
-        // fetchQuestionForBlock ถูกเรียกมาจาก game_logic.js
-        window.fetchQuestionForBlock = function(level, blockTypeCategory, blockObj, callback) {
-            activeBlockMetaData = blockObj;
-            activeQuestionCategory = blockTypeCategory;
+        // window.fetchQuestionForCombat ถูกเรียกโดย chess_logic.js เมื่อมีการโจมตี
+        window.fetchQuestionForCombat = function(level, combatData) {
+            activeBlockMetaData = combatData; // เก็บข้อมูลการโจมตี (attacker, defender, from, to)
             fetchQuestionAndShow(level);
         }
 
@@ -474,6 +332,15 @@
             
             const imgElement = document.getElementById('question-image');
             const noImgElement = document.getElementById('question-no-img');
+            const frameContainer = document.getElementById('frame-container');
+            
+            // สุ่มโหลดกรอบรูป 1, 2, หรือ 3
+            const randomFrame = Math.floor(Math.random() * 3) + 1;
+            const defenderRole = activeBlockMetaData && activeBlockMetaData.defenderPiece ? activeBlockMetaData.defenderPiece.type : 'pawn';
+            const frameUrl = `/all_game/${activeGameName}/img_role/${defenderRole}/${randomFrame}.png`;
+            
+            frameContainer.style.backgroundImage = `url('${frameUrl}'), linear-gradient(#ecf0f1, #bdc3c7)`; // เพิ่ม gradient สำรองเผื่อรูปโหลดไม่ขึ้น
+
             imgElement.src = imgUrl; // พยายามโหลดรูป
             imgElement.style.display = 'block';
             noImgElement.style.display = 'none';
@@ -551,51 +418,23 @@
             clearInterval(questionTimer);
             document.getElementById('question-modal').classList.add('hidden');
             
-            let p = players[activePlayerId];
-            let payAmount = 0;
+            let p = players.find(x => x.color === turnColor);
             let logStatus = isTimeout ? "หมดเวลา" : (isCorrect ? "ถูก" : "ผิด");
 
             // บันทึก Log การตอบคำถาม
             const qTitle = document.getElementById('question-title').innerText;
             p.actionLog.push({
                 question: qTitle,
-                level: activeBlockMetaData?.currentRule?.level || "N/A",
+                level: activeBlockMetaData?.level || "N/A",
                 status: logStatus
             });
-
-            if (activeBlockMetaData && activeBlockMetaData.currentRule) {
-                if (isCorrect) {
-                    // ตอบถูก ได้สิทธิ์จ่ายค่าผ่านทางแบบหักส่วนลด (หรือรอด 100% ถ้า level สูง)
-                    payAmount = Math.floor(activeBlockMetaData.currentRule.originalValue * activeBlockMetaData.currentRule.penaltyMultiplier);
-                    if (payAmount > 0) {
-                        alert(`✅ ยอดเยี่ยม! ${p.name} ตอบถูก! ได้รับส่วนลดเหลือจ่ายเพียง ฿${payAmount}`);
-                    } else {
-                        alert(`✅ ยอดเยี่ยม! ${p.name} รอดตัวไป ไม่ต้องเสียเงินปรับ!`);
-                    }
-                } else {
-                    // ตอบผิด โดนปรับเต็มจำนวน
-                    payAmount = activeBlockMetaData.currentRule.originalValue;
-                    alert(`❌ ${p.name} ตอบผิด หรือหมดเวลา! ต้องจ่ายเต็มจำนวน ฿${payAmount}`);
-                }
-            } else {
-                // บล็อกอื่นๆ เช่น คุก ตั๋วเที่ยว (ไม่มี currentRule ระบุส่วนลด)
-                if (isCorrect) {
-                    alert(`✅ ยอดเยี่ยม! ${p.name} ตอบถูก!`);
-                } else {
-                    payAmount = 500;
-                    alert(`❌ เสียใจด้วย! ${p.name} ตอบผิด ถูกหักเงิน ฿${payAmount}`);
-                }
-            }
             
-            p.money -= payAmount;
-            if (p.money <= 0) {
-                p.money = 0;
-                p.bankrupt = true;
-                alert(`💀💸 ${p.name} ล้มละลาย และออกจากเกม!`);
+            // เรียก handleCombatResult ใน chess_logic.js
+            if(window.handleCombatResult) {
+                window.handleCombatResult(isCorrect, activeBlockMetaData);
             }
             
             activeBlockMetaData = null; // คืนค่า
-            endPlayerTurn();
         }
 
         function startTimer(seconds) {
