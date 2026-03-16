@@ -19,6 +19,11 @@ function initChessBoard() {
     const container = document.getElementById('board-container');
     container.innerHTML = '';
     
+    // ตั้งค่าขนาดและขอบของกระดานตามบอร์ดคอนฟิก
+    container.style.gridTemplateColumns = `repeat(8, ${BOARD_CONFIG.cellSize}px)`;
+    container.style.gridTemplateRows = `repeat(8, ${BOARD_CONFIG.cellSize}px)`;
+    container.style.border = `${BOARD_CONFIG.borderSize}px solid ${BOARD_CONFIG.borderColor}`;
+    
     // Setup initial board state
     // Black at top (row 0, 1), White at bottom (row 6, 7)
     const backRow = ['rook', 'knight', 'bishop', 'queen', 'king', 'bishop', 'knight', 'rook'];
@@ -34,10 +39,15 @@ function initChessBoard() {
             boardState[r][c] = pieceInfo;
             
             const cell = document.createElement('div');
-            cell.className = `block ${(r+c)%2===0 ? 'white' : 'black'}`;
+            const isWhiteCell = (r+c)%2===0;
+            cell.className = `block ${isWhiteCell ? 'white' : 'black'}`;
             cell.id = `cell-${r}-${c}`;
             cell.dataset.r = r;
             cell.dataset.c = c;
+            
+            // ตั้งค่าสีกระดานให้กับช่อง
+            cell.style.backgroundColor = isWhiteCell ? BOARD_CONFIG.colorLight : BOARD_CONFIG.colorDark;
+            
             cell.onclick = () => onCellClick(r, c);
             
             if(pieceInfo) {
@@ -60,7 +70,10 @@ function renderBoard() {
         for(let c=0; c<8; c++) {
             const cell = document.getElementById(`cell-${r}-${c}`);
             cell.innerHTML = '';
-            cell.className = `block ${(r+c)%2===0 ? 'white' : 'black'}`; // ติดสีพื้นฐาน
+            
+            const isWhiteCell = (r+c)%2===0;
+            cell.className = `block ${isWhiteCell ? 'white' : 'black'}`; // ติดสีพื้นฐาน
+            cell.style.backgroundColor = isWhiteCell ? BOARD_CONFIG.colorLight : BOARD_CONFIG.colorDark;
             
             // Highlight selected
             if (selectedPos && selectedPos.r === r && selectedPos.c === c) {
@@ -221,21 +234,24 @@ function executeMove(from, to, isAttack) {
     window.fetchQuestionForCombat(combatData.level, combatData);
 }
 
-function checkAura(r, c, allyColor) {
+function countAura(r, c, allyColor, ignorePos) {
+    let count = 0;
     // ลูปดูระยะ 1 ช่องรอบตัวเป้าหมาย (r, c)
     for(let dr=-1; dr<=1; dr++) {
         for(let dc=-1; dc<=1; dc++) {
             if(dr===0 && dc===0) continue;
             let nr = r + dr, nc = c + dc;
+            if (ignorePos && nr === ignorePos.r && nc === ignorePos.c) continue; // ข้ามตัวที่ถูกระบุ (เพื่อไม่ให้บัพตัวเอง)
+            
             if(nr>=0 && nr<=7 && nc>=0 && nc<=7) {
                 const adjPiece = boardState[nr][nc];
                 if(adjPiece && adjPiece.color === allyColor && (adjPiece.type === 'bishop' || adjPiece.type === 'queen')) {
-                    return true;
+                    count++;
                 }
             }
         }
     }
-    return false;
+    return count;
 }
 
 function calculateCombatLevel(from, to, attacker, defender) {
@@ -262,11 +278,11 @@ function calculateCombatLevel(from, to, attacker, defender) {
     }
 
     // เช็คออร่า Buff ของ 8 ทิศรอบตัวเป้าหมาย
-    const attackerHasBuff = checkAura(to.r, to.c, attacker.color); // ท่าดีขึ้น ตัวบัฟยืนใกล้เป้าหมาย
-    const defenderHasBuff = checkAura(to.r, to.c, defender.color); // ยืนป้องกันเพื่อน
+    const attackerBuffCount = countAura(to.r, to.c, attacker.color, from); // ท่าดีขึ้น ตัวบัฟยืนใกล้เป้าหมาย (ไม่นับตัวเอง)
+    const defenderBuffCount = countAura(to.r, to.c, defender.color, to);   // ยืนป้องกันเพื่อน (ไม่นับตัวเอง)
 
-    if (attackerHasBuff) baseLevel--;
-    if (defenderHasBuff) baseLevel++;
+    baseLevel -= attackerBuffCount;
+    baseLevel += defenderBuffCount;
 
     // Lock range 1-4
     if(baseLevel < 1) baseLevel = 1;
@@ -279,37 +295,79 @@ function calculateCombatLevel(from, to, attacker, defender) {
 // Callback ที่ถูกเรียกกลับมาจากหน้า index.html 
 // ------------------------------------------
 window.handleCombatResult = function(isCorrect, combatData) {
-    const { from, to, attackerPiece, defenderPiece } = combatData;
+    const { from, to, attackerPiece, defenderPiece, isCounterAttack, originalTurnColor } = combatData;
     
-    if (isCorrect) {
-        // ตอบถูก - โจมตีสำเร็จ กินหมาก กินคิงชนะเลย
-        alert(`⚔️ โจมตีสำเร็จ! กิน ${defenderPiece.type} ศัตรูได้`);
-        boardState[to.r][to.c] = attackerPiece;
-        boardState[from.r][from.c] = null;
+    // หากนี่คือผลจากการสวนกลับ
+    if (isCounterAttack) {
+        // คืนค่าตาเดินกลับเป็นของคนที่เริ่มโจมตีตอนแรก (เพื่อให้ตอนท้ายฟังก์ชันมันสลับไปเป็นตาของอีกฝั่งให้ถูกต้อง)
+        turnColor = originalTurnColor;
         
-        if (defenderPiece.type === 'king') {
-            const defeatedPlayerIndex = players.findIndex(p => p.color === defenderPiece.color);
-            players[defeatedPlayerIndex].isDefeated = true;
-            renderBoard();
-            window.endGame();
-            return;
-        }
-
-    } else {
-        // ตอบผิด - โจมตีไม่สำเร็จ
-        alert(`💢 โจมตีไม่สำเร็จ! ถอยกลับจุดเดิม`);
-        
-        // กฎสวนกลับของ King และ Queen
-        if (defenderPiece.type === 'king' || defenderPiece.type === 'queen') {
-            alert(`🚨 ระวัง! ${defenderPiece.type} ทำการโจมตีสวนกลับ(Counter-attack) โดยอัตโนมัติ! หมากคุณถูกกิน`);
-            boardState[from.r][from.c] = null; // ผู้โจมตีตาย
+        if (isCorrect) {
+            alert(`🚨 ${attackerPiece.type} สวนกลับสำเร็จ! หมากฝั่งตรงข้ามถูกกิน`);
+            boardState[to.r][to.c] = null; // เป้าหมายของการสวนกลับ (คือผู้โจมตีตอนแรก) ตาย, แต่ตัวสวนกลับอยู่ที่เดิม
             
-            if (attackerPiece.type === 'king') {
-                const defeatedPlayerIndex = players.findIndex(p => p.color === attackerPiece.color);
+            if (defenderPiece.type === 'king') { // ถ้าคนที่ไปปะทะตายเป็นคิง
+                const defeatedPlayerIndex = players.findIndex(p => p.color === defenderPiece.color);
                 players[defeatedPlayerIndex].isDefeated = true;
                 renderBoard();
                 window.endGame();
                 return;
+            }
+        } else {
+            alert(`💥 มึนงง! สวนกลับล้มเหลว!`);
+        }
+        
+        // จบกรณีสวนกลับ มันจะไหลลงไปข้างล่างเพื่อสลับเทิร์นปกติ (turnColor = turnColor === 'white' ? 'black' : 'white')
+    } 
+    else {
+        // กรณีการโจมตีธรรมดา
+        if (isCorrect) {
+            // ตอบถูก - โจมตีสำเร็จ กินหมาก กินคิงชนะเลย
+            alert(`⚔️ โจมตีสำเร็จ! กิน ${defenderPiece.type} ศัตรูได้`);
+            boardState[to.r][to.c] = attackerPiece;
+            boardState[from.r][from.c] = null;
+            
+            if (defenderPiece.type === 'king') {
+                const defeatedPlayerIndex = players.findIndex(p => p.color === defenderPiece.color);
+                players[defeatedPlayerIndex].isDefeated = true;
+                renderBoard();
+                window.endGame();
+                return;
+            }
+
+        } else {
+            // ตอบผิด - โจมตีไม่สำเร็จ
+            alert(`💢 โจมตีไม่สำเร็จ! ถอยกลับจุดเดิม`);
+            
+            // กฎสวนกลับของ King และ Queen
+            if (defenderPiece.type === 'king' || defenderPiece.type === 'queen') {
+                alert(`🚨 ระวัง! ${defenderPiece.type} เตรียมโจมตีสวนกลับ! ฝั่ง ${defenderPiece.color} โปรดมาตอบคำถามโจทย์ป้องกันตัว`);
+                
+                // สลับ turnColor ชั่วคราวเพื่อให้ UI บันทึก log ได้ถูกต้องเวลารับคำตอบ
+                let currentAtkColor = turnColor;
+                turnColor = turnColor === 'white' ? 'black' : 'white';
+                window.updateUI();
+
+                // คำนวณเลเวลสวนกลับ (เริ่ม 2 + บัฟออร่าเพื่อน)
+                let baseLevel = 2;
+                // หาบัพแถวๆ เป้าหมาย (from) ที่เป็นสีของคนสวนกลับ (ไม่นับตัวเองที่ to)
+                let counterBuffCount = countAura(from.r, from.c, defenderPiece.color, to); 
+                baseLevel -= counterBuffCount;
+                if(baseLevel < 1) baseLevel = 1;
+                if(baseLevel > 4) baseLevel = 4;
+
+                const counterCombatData = {
+                    level: baseLevel,
+                    attackerPiece: defenderPiece, // คนสวนกลับคือ attacker ของตาใหม่
+                    defenderPiece: attackerPiece, // เป้าหมายของการสวนคือคนที่ทำตีพลาด
+                    from: to, // สวนกลับจากตำแหน่งที่มันยืนอยู่ (to)
+                    to: from, // เป้าหมายของการสวนกลับคือตำแหน่งคนโจมตี (from)
+                    isCounterAttack: true,
+                    originalTurnColor: currentAtkColor
+                };
+                
+                window.fetchQuestionForCombat(counterCombatData.level, counterCombatData);
+                return; // หยุดการทำงานตรงนี้ เพื่อรอผลจากหน้า UI สำหรับสวนกลับ
             }
         }
     }
