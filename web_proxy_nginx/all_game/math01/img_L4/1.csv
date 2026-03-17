@@ -1,1 +1,4 @@
-1,true_or_false,20,True,True,False
+1,Objective_Test,60,D,A,B,C,D
+2,Subjective_Test,60,200,,,,
+3,Objective_Test,60,A,A,B,C,D
+4,Subjective_Test,60,70,,,,
